@@ -1,7 +1,7 @@
 Classifying Users
 ============================================================
 
-只要对Python和Bash有一定的了解，这部分的代码其实是很简单的，但要理解代码背后的算法原理是要费点力气的，至少对我来说是这样的。所以下面先来介绍算法原理，算法原理清楚之后，代码就一目了然了。
+这部分的代码本身其实是很简单的，只要对Python和Bash有一定的了解就应该能看得懂代码本身。重要的是代码背后的算法原理，所以下面先来介绍算法原理。
 
 分类使用的算法是[SimRank](http://en.wikipedia.org/wiki/SimRank)，这个算法的核心思想就是"two objects are considered to be similar if they are referenced by similar objects."，这种思想体现在下面的公式中。
 
@@ -9,7 +9,7 @@ Classifying Users
 
 a和b的相似性s(a,b)由它们的in-neighbors的相似性来决定，而它们的in-neighbors的相似性又由in-neighbors的in-neighbors来决定，这是一个递归的过程。
 
-Step 1. Extract content items played
+Extract content items played
 ------------------------------------------------------------
 
 ```bash
@@ -25,7 +25,7 @@ $ hadoop fs -cat kid/part-00000 | head -4
 提取用户播放、评分、评论过的内容项。kid数据的第一列是用户ID，后跟字母'a'表示用户为'adult'，跟字母'k'表示用记为'kid'；第二列是对应用户播放、评分、评论过的内容项列表，以逗号相隔。
 
 
-Step 2. Prepare the SimRank algorithm
+Prepare the SimRank algorithm
 ------------------------------------------------------------
 
 ```bash
@@ -44,7 +44,7 @@ $ head -24 kids | hadoop fs -put - kids_test
 将kid数据中的'adult'用户以4:1的比例，分成训练数据集（training set）和测试数据集（test set）；以同样的方法分隔'kid'用户。顺便说下，只有这些被标记为'a'或'k'的用户，才可以作为起始结点，才可以瞬移（telport）。
 
 
-Step 3. Build an adjacency matrix
+Build an adjacency matrix
 ------------------------------------------------------------
 
 ```bash
