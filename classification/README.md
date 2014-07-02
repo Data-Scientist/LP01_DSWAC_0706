@@ -1,14 +1,19 @@
 Classifying Users
 ============================================================
 
-Step 1、Step 2、Step 3都比较简单，会粗略的说明一下，后面Step 4、Step 5、Step 6是算法的核心部分，会作较详细的介绍。
+只要对Python和Bash有一定的了解，这部分的代码其实是很简单的，但要理解代码背后的算法原理是要费点力气的，至少对我来说是这样的。所以下面先来介绍算法原理，算法原理清楚之后，代码就一目了然了。
 
+分类使用的算法是[SimRank](http://en.wikipedia.org/wiki/SimRank)，这个算法的核心思想就是"two objects are considered to be similar if they are referenced by similar objects."，这种思想体现在下面的公式中。
+
+![s(a,b)=\frac {c} {\abs{I(a)}\abs{I(b)}} \sum_{i=1}^{\abs{I(a)}} \sum_{j=1}^{\abs{I(b)}} s(I_{i}(a), I_{j}(b))](http://www.sciweavers.org/tex2img.php?eq=s%28a%2Cb%29%3D%5Cfrac%20%7Bc%7D%20%7B%5Cabs%7BI%28a%29%7D%5Cabs%7BI%28b%29%7D%7D%20%5Csum_%7Bi%3D1%7D%5E%7B%5Cabs%7BI%28a%29%7D%7D%20%5Csum_%7Bj%3D1%7D%5E%7B%5Cabs%7BI%28b%29%7D%7D%20s%28I_%7Bi%7D%28a%29%2C%20I_%7Bj%7D%28b%29%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+
+a和b的相似性s(a,b)由它们的in-neighbors的相似性来决定，而它们的in-neighbors的相似性又由in-neighbors的in-neighbors来决定，这是一个递归的过程。
 
 Step 1. Extract content items played
-============================================================
+------------------------------------------------------------
 
 ```bash
-hadoop jar $STREAMING -mapper kid_map.py -file kid_map.py -reducer kid_reduce.py -file kid_reduce.py -input clean -output kid
+$ hadoop jar $STREAMING -mapper kid_map.py -file kid_map.py -reducer kid_reduce.py -file kid_reduce.py -input clean -output kid
 
 $ hadoop fs -cat kid/part-00000 | head -4  
 10108881    9107,16316  
@@ -21,7 +26,7 @@ $ hadoop fs -cat kid/part-00000 | head -4
 
 
 Step 2. Prepare the SimRank algorithm
-============================================================
+------------------------------------------------------------
 
 ```bash
 $ hadoop fs -cat kid/part-\* | cut -f1 | grep a > adults  
@@ -36,14 +41,14 @@ $ tail -n +25 kids | hadoop fs -put - kids_train
 $ head -24 kids | hadoop fs -put - kids_test 
 ```
 
-将kid数据'adult'用户以4:1的比例，分成训练数据集（training set）和测试数据集（test set）；以同样的方法分隔'kid'用户。顺便说下，只有这些被标记为'a'或'k'的用户，才可以作为起始结点，才可以瞬移（telport）。
+将kid数据中的'adult'用户以4:1的比例，分成训练数据集（training set）和测试数据集（test set）；以同样的方法分隔'kid'用户。顺便说下，只有这些被标记为'a'或'k'的用户，才可以作为起始结点，才可以瞬移（telport）。
 
 
 Step 3. Build an adjacency matrix
-============================================================
+------------------------------------------------------------
 
 ```bash
-doop jar $STREAMING -mapper item_map.py -file item_map.py -reducer item_reduce.py -file item_reduce.py -input kid -output item  
+$ hadoop jar $STREAMING -mapper item_map.py -file item_map.py -reducer item_reduce.py -file item_reduce.py -input kid -output item  
 
 $ hadoop fs -cat item/part-\* | head  
 10081e1 85861225,78127887,83817844,67863534,79043502  
