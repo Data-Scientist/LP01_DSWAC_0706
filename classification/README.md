@@ -11,7 +11,7 @@
 计算相似性使用的算法是[SimRank](http://en.wikipedia.org/wiki/SimRank)，这个算法的核心思想就是
 "two objects are considered to be similar if they are referenced by similar objects."，这种思想体现在下面的公式中。
 
-![s(a,b)=\frac {c} {\abs{I(a)}\abs{I(b)}} \sum_{i=1}^{\abs{I(a)}} \sum_{j=1}^{\abs{I(b)}} s(I_{i}(a), I_{j}(b))](http://www.sciweavers.org/tex2img.php?eq=s%28a%2Cb%29%3D%5Cfrac%20%7Bc%7D%20%7B%5Cabs%7BI%28a%29%7D%5Cabs%7BI%28b%29%7D%7D%20%5Csum_%7Bi%3D1%7D%5E%7B%5Cabs%7BI%28a%29%7D%7D%20%5Csum_%7Bj%3D1%7D%5E%7B%5Cabs%7BI%28b%29%7D%7D%20s%28I_%7Bi%7D%28a%29%2C%20I_%7Bj%7D%28b%29%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+![s(a,b)=\frac {c} {\abs{I(a)}\abs{I(b)}} \sum_{i=1}^{\abs{I(a)}} \sum_{j=1}^{\abs{I(b)}} s(I_{i}(a), I_{j}(b))](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/simrank.png)
 
 a和b的相似性s(a,b)由它们的in-neighbors的相似性来决定，而它们的in-neighbors的相似性又由in-neighbors的in-neighbors来决定，这是一个递归的过程。
 
@@ -48,7 +48,7 @@ PageRank算法是衡量网页的权重的，也就是网络优化时经常讲到
 
 ### Implement the SimRank algorithm
 
-![v\prime = \beta M v + (1 - \beta)e/n](http://www.sciweavers.org/tex2img.php?eq=v%5Cprime%20%3D%20%5Cbeta%20M%20v%20%2B%20%281%20-%20%5Cbeta%29e%2Fn&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+![v\prime = \beta M v + (1 - \beta)e/n](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/pagerank.png)
 
 'v' is distribution vector, 'M' is transition matrix.
 
@@ -79,15 +79,15 @@ u3k
 
 因为训练集中只有两个用户，选择它们任何一个的概率都为1/2，所以初始的distribution vector为：
 
-![v = \begin{bmatrix}\frac {1}{2} \\ 0 \\ \frac {1}{2} \\ 0 \\ 0 \\ 0 \end{bmatrix}](http://www.sciweavers.org/tex2img.php?eq=%20v%20%3D%20%5Cbegin%7Bbmatrix%7D%5Cfrac%20%7B1%7D%7B2%7D%20%5C%5C%200%20%5C%5C%20%5Cfrac%20%7B1%7D%7B2%7D%20%5C%5C%200%20%5C%5C%200%20%5C%5C%200%20%5Cend%7Bbmatrix%7D%20&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+![v = \begin{bmatrix}\frac {1}{2} \\ 0 \\ \frac {1}{2} \\ 0 \\ 0 \\ 0 \end{bmatrix}](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/v.png)
 
 v(1)是选择u1k的概率，... ，v(4)是选择m1的概率，...。类推，先user，后item。
 
 从kid和item的信息中可知，u1k的两条出边(out-links)分别指向m1和m2，这样从u1k到m1和m2的概率都是1/2，其它结点类推。这样可知transition matrix为：
 
-![ v = \begin{bmatrix} 0 & 0 & 0 & \frac {1}{2} & \frac{1}{2} & 0 \\ 0 & 0 & 0 & \frac {1}{2} & \frac {1} {2} & \frac {1}{2} \\ 0 & 0 & 0 & 0 & 0 & \frac {1}{2} \\ \frac {1}{2} & \frac {1}{3} & 0 & 0 & 0 & 0 \\ \frac {1}{2} & \frac {1}{2} & 0 & 0 & 0 & 0 \\ 0 & \frac {1}{3} & 1 & 0 & 0 & 0 \end{bmatrix} ](http://www.sciweavers.org/tex2img.php?eq=%20v%20%3D%20%5Cbegin%7Bbmatrix%7D%200%20%26%200%20%26%200%20%26%20%5Cfrac%20%7B1%7D%7B2%7D%20%26%20%5Cfrac%7B1%7D%7B2%7D%20%26%200%20%5C%5C%200%20%26%200%20%26%200%20%26%20%5Cfrac%20%7B1%7D%7B2%7D%20%26%20%5Cfrac%20%7B1%7D%20%7B2%7D%20%26%20%5Cfrac%20%7B1%7D%7B2%7D%20%5C%5C%200%20%26%200%20%26%200%20%26%200%20%26%200%20%26%20%5Cfrac%20%7B1%7D%7B2%7D%20%5C%5C%20%5Cfrac%20%7B1%7D%7B2%7D%20%26%20%5Cfrac%20%7B1%7D%7B3%7D%20%26%200%20%26%200%20%26%200%20%26%200%20%5C%5C%20%5Cfrac%20%7B1%7D%7B2%7D%20%26%20%5Cfrac%20%7B1%7D%7B2%7D%20%26%200%20%26%200%20%26%200%20%26%200%20%5C%5C%200%20%26%20%5Cfrac%20%7B1%7D%7B3%7D%20%26%201%20%26%200%20%26%200%20%26%200%20%5Cend%7Bbmatrix%7D%20&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+![ v = \begin{bmatrix} 0 & 0 & 0 & \frac {1}{2} & \frac{1}{2} & 0 \\ 0 & 0 & 0 & \frac {1}{2} & \frac {1} {2} & \frac {1}{2} \\ 0 & 0 & 0 & 0 & 0 & \frac {1}{2} \\ \frac {1}{2} & \frac {1}{3} & 0 & 0 & 0 & 0 \\ \frac {1}{2} & \frac {1}{2} & 0 & 0 & 0 & 0 \\ 0 & \frac {1}{3} & 1 & 0 & 0 & 0 \end{bmatrix} ](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/transition_matrix.png)
 
-实现代码中 ![\beta = 0.8](http://www.sciweavers.org/tex2img.php?eq=%5Cbeta%20%3D%200.8&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0) ，n也就是训练样本的大小，这样所有的数据都有了，就可以进行计算了。
+实现代码中 ![\beta = 0.8](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/beta.png) ，n也就是训练样本的大小，这样所有的数据都有了，就可以进行计算了。
 
 `simrank.sh` 循环调用hadoop streaming，每循环一次，就使用Page Rank的公式计算一次distribution vector，也就相当于向外扩散了一次，也就相当于Markov chain改变了一次状态。当distribution vector的改变足够小时，说明收敛了，计算结束。
 
