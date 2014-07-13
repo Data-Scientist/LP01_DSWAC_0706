@@ -5,13 +5,13 @@ step1. Profile the data
 任何数据分析之前，都要对数据有一个大概的了解。
 
 基本思想就是：
-1. 分析数据大小，几乎是例行要做的
-2. 分析各个特征的含义和分布
+1.  分析数据大小，几乎是例行要做的
+2.  分析各个特征的含义和分布
 
 这里面需要用到很多linux的命令行，用熟悉了之后感觉还是挺方便的。先大体介绍几个简单函数： 
 
-``
-man cmd:  显示对cmd的所有解释。不懂的就man一下😃
+```
+man cmd:  显示对cmd的所有解释。不懂的就man一下 :)
 head:  当数据量很大的时候，先看前面几行文件会很快捷
 tail:  和head对应，显示最后几行内容。head和tail都可以通过-n参数指定显示几行
 du -sh dir/file:  以人类可读的形式显示目录或file的总大小
@@ -25,10 +25,10 @@ xargs:  linux内部最强大的中介，和其他命令组合可以实现很多�
 find . -type f -name "*.cpp"|xargs grep "interesting": 在所有cpp后缀的文件中，grep含interesting的文件 
 echo -e "kid\nrank"|xargs -i -n1 grep "{}" */*.sh:  等效于在当前所有子目录的以.sh为后缀的文件中，分别执行grep kid和grep rank两个命令。所以xargs可以有效减少loop的使用。当然效率可能会低一些。
 grep:  正则匹配查找。上面也讲了一些，但是只是九牛一毛。最好的方法还是man一下  
-``
+```
 有了以上的工具之后，你就可以尽情的去欣赏数据了。
 在本例中，你可以这样：
-``
+```
 $ cd ~/data 
 $ du -sh . # 查看目录大小
 201M .
@@ -79,4 +79,4 @@ $ head -5 heckle/web.log ＃ 大体看一下
 {"auth": "6f691c:455e17cb", "createdAt": "2013-05-12T00:00:10-08:00", "payload": {"itemId"": "7347", "marker": 1059}, "refId": "4b5021f4", "sessionID": "2d3aef1d-ec8d-4053-8c40- e8579e547745", "type": "Play", "user": 7301404, "userAgent": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; WDL6.1.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)"}
 {"auth": "1208d4c:279737f7", "createdAt": "2013-05-12T00:00:11-08:00", "payload": {"itemId"": "3702e4", "marker": 780}, "refId": "7586e549", "sessionID": "d4a244cb-d502-4c94-a80d- 3d26ca54a449", "type": "Play", "user": 18910540, "userAgent": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; GTB7.2; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.2)"}
 
-``
+```
