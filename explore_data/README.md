@@ -86,12 +86,13 @@ step2. Load data into hdfs
 --------------------------
 调用如下命令把data目录整个copy到虚拟机的hadoop集群：
 
+```
 hadoop fs -copyFromLocal data
-
+```
 命令原型如下：data就是此时的localsrc，des不指定就是hadoop的home目录
-
+```
 hadoop fs [generic options] -copyFromLocal <localsrc> ... <dst>
-
+```
 上传完之后使用`hadoop fs -ls`命令看一下data目录是否存在
 
 `hadoop fs -help`可以看到所有和文件系统（fs）相关的命令函数帮助信息
