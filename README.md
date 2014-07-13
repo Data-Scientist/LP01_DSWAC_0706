@@ -7,7 +7,7 @@ Lords first big data demo project, learning from cloudera's ccp-2013: Data Scien
 ---------------------------
 Lords Movie 是一个提供电影服务的网站，他们的团队一直致力于为用户提供最好的服务。为此他们建立了一个日志系统记录用户的行为，包括用户id、浏览行为、电影评分、session等等。
 
-现在为了进一步改善他们的服务，他们雇佣你来为他们解决一些关键问题，他们希望你能创建一幅用户图谱，设计一个的推荐系统从而准确的描述用户喜好，为此你必须设计一款“数据产品（data product）”，解决数据科学里面经典的3个问题：
+现在为了进一步改善他们的服务，他们雇佣你来为他们解决一些关键问题，他们希望你能创建一幅用户图谱，设计一个强大的推荐系统从而准确的描述用户喜好，为此你必须设计一款“数据产品（data product）”，解决数据科学里面经典的3个问题：
 
 1. 分类器。Lords Movie的法律团队希望你能根据现有的日志准确的区分出成人和未成年人
 
@@ -29,3 +29,14 @@ Lords Movie 是一个提供电影服务的网站，他们的团队一直致力�
 * Content ID中含`e`的部分表示电视剧，`e`后面的数字表示集数
 * 如果视频播到最后，`stop`事件会被记录；而如果在此之前，用户离开页面，该事件是不会记录的
 * 所有时间戳都是Lords Movie服务器的本地时间
+
+
+3. Work with VM
+--------------------------
+Virtual Box和VMWare的地址
+// todo
+
+在虚拟机里面数据和脚本都准备好了：
+数据在 /home/cloudera/data
+脚本在 /home/cloudera/dscripts
+也可以去[github](https://github.com/clouderacertifiedprofessional/) clone
