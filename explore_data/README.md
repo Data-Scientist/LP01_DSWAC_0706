@@ -98,6 +98,19 @@ hadoop fs [generic options] -copyFromLocal <localsrc> ... <dst>
 `hadoop fs -help`可以看到所有和文件系统（fs）相关的命令函数帮助信息
 
 实际中，如果真是大数据的话，是不可能从本地上传的，如果日志已经存放在hadoop集群上，可能需要distcp从那个集群拷贝到你所在的集群；如果日志是散布在很多类似zookeeper的节点上，就需要写一个map脚本，每个mapper都负责把一部分节点上的日志wget到本地，然后put到集群上。
+
 step3. Determin Event types
 ----------------------------
+通过对问题的分析和刚才的观察，我们发现，event将是我们后面分析的重点。因此分析event的类型分布将是首先要做的。(本节代码见scripts/exploring目录)
+
+对于nominal特征，我们一般要回答如下几个问题：特征有多少种值类型，每种比例大概多少，是否有missing value。当面对大数据时，我们必须写hadoop/spark代码才能解答我们上面的问题。不过有一个经验是：先在本地小数据上验证一下代码，因为在分布式上跑程序还是非常耗时的。本地验证能让你尽早发现bug。
+本地运行的方法是：
+
+```
+cat input |sh -x mapper.sh|sort -k1 |sh -x reducer.sh
+```
+
+本例中，通过`grep\_field.sh` 来统计type种类和分布。
+具体操作如下：
+
 
