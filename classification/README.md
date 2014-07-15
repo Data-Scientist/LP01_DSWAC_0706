@@ -66,7 +66,7 @@ A、C，说明页面D中有A、C两条外链，且权值都为1/2。
 使用上面的公式迭代计算几十次之后，得到下面的结果，从结果中可以看出A的权重最高，这个结果是非常合理的，
 虽然C的incoming links比A多，但如果当前浏览的是C那么只能转向A，也就是说A享有C享有的被访问概率，而且自己还有除C以外的incoming links。
 
-![v = \begin{bmatrix} 0.3870968 \\ 0.1290323 \\ 0.2903226 \\ 0.1935484 \end{bmatrix}](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/distribution-vector-result-1.png)
+![v = \begin{bmatrix} 0.3870968 \\ 0.1290323 \\ 0.2903226 \\ 0.1935484 \end{bmatrix}](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/distribution-vector-result.png)
 
 #### 特殊情况处理
 
@@ -140,7 +140,7 @@ u1看过电影m1和m2，同样u2k也看过电影m1和m2，u3看过电影m2和m3�
 
 因为只给训练样本中的同类型结点初始概率，也就是只能从u2k开始扩散，所以distribution vector v如下。
 
-![\begin{bmatrix} 0 \\ 1 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/init-vector-ccp.png)
+![\begin{bmatrix} 0 \\ 1 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix}](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/init-vector-cpp.png)
 
 ```r
 M = matrix(c(  0,   0,   0, 1/2, 1/2,   0, 
