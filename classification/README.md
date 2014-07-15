@@ -227,4 +227,6 @@ distribution vector后3个数可以忽略，因为它们是电影对应的值，
 
 ## 其它
 
-这个目录下的代码中添加了一点注释，有兴趣的可以看看。
+这里我只重点描述说明算法，具体代码实现，上面只简要的说了一下，因为代码的实现本身非常简单，
+直接看代码 [3. Classifying Users](http://certification.cloudera.com/prep/dsc1sk/classifying.html)，
+比听我废话要强很多。另外这个目录下放的代码中会添加了一些注释，有兴趣的可以看看。
