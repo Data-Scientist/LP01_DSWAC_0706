@@ -59,7 +59,8 @@ A、C，说明页面D中有A、C两条外链，且权值都为1/2。
 是下一个状态的distribution vector，也就是下一个状态我们可能访问各个页面的概率。从上面的计算描述中，可以知道如果
 结点的incoming links越多，且incoming links对应的权值越大，就越可能被浏览到，页面的Pr值也就越高。上面这样计算一次，
 也就相当于使用`M`影响一次初始的`v_0`，因为页面最终的权重(Pr值)是要由M来决定的，所以M影响的次数越多，最终的结果就越准确。
-于是就有了下面的迭代计算公式。
+于是就有了下面的迭代计算公式。这个迭代计算的过程类似[马尔可夫链(Markov Chain)](http://en.wikipedia.org/wiki/Markov_chain#Example)，
+每相乘一次，状态改变一次。
 
 ![v_{k+1}=M v_k](https://raw.githubusercontent.com/Data-Scientist/LP01_DSWAC_0706/master/classification/images/mvk.png)
 
