@@ -84,12 +84,12 @@ $ ml summary --summary-file summary.json --header-file header.csv --format text 
 ####3. 标准化特征
 $ ml normalize --summary-file summary.json --format text --id-column 0 --transform Z --input-paths features.csv --output-path part2normalized --output-type avro
 
-###步骤5: 生成k-means++概要文件
-####1. 执行ksketch,生成概要文件
+####4. 执行ksketch,生成k-means++概要文件
 $ ml ksketch --format avro --input-paths part2normalized --output-file part2sketch.avro --points-per-iteration 1000 --iterations 10 --seed 1729 
-####2. 执行kmeans
+####5. 执行kmeans
 $ ml kmeans --input-file part2sketch.avro --centers-file part2centers.avro --clusters 40,60,80,100,120,140,160,180,200 --best-of 3 --seed 1729 --num-threads 1 --eval-details-file part2evaldetails.csv --eval-stats-file part2evalstats.csv  
-####3. 修改header.csv,增加与feature_map.py对应的新的特征
+###步骤5：修正特征，重新执行Cloudera ML工作流
+####1. 修改header.csv,增加与feature_map.py对应的新的特征
 session_id,identifier  
 updatePassword,categorical  
 updatePaymentInfo,categorical  
@@ -105,8 +105,8 @@ num_recommendations
 num_rated
 num_reviewed
 num_searched
-####4.修改feature_map.py，增加新添的特征的解析
-####5. 重新执行cloudear ml工作流
+####2.修改feature_map.py，增加新添的特征的解析
+####3. 重新执行cloudear ml工作流
 $ hadoop jar $STREAMING -D mapred.reduce.tasks=0 -D mapred.textoutputformat.separator=, -D stream.map.output.field.separator=, -mapper features_map.py -file features_map.py -input merged -output features1  
 $ hadoop fs -getmerge features1 features.csv  
 $ hadoop fs -rm features.csv  
@@ -115,7 +115,8 @@ $ ml summary --summary-file summary.json --header-file header.csv --format text 
 $ ml normalize --summary-file summary.json --format text --id-column 0 --transform Z --input-paths features.csv --output-path part2normalized --output-type avro  
 $ ml ksketch --format avro --input-paths part2normalized --output-file part2sketch.avro --points-per-iteration 1000 --iterations 10 --seed 1729  
 $ ml kmeans --input-file part2sketch.avro --centers-file part2centers.avro --clusters 40,60,80,100,120,140,160,180,200 --best-of 3 --seed 1729 --num-threads 1 --eval-details-file part2evaldetails.csv --eval-stats-file part2evalstats.csv  
-####6. 修改header.csv，删除掉一些的特征，剩下的特征如下：
+###步骤6：再次修正特征，重新执行Cloudera ML工作流
+####1. 修改header.csv，删除掉一些的特征，剩下的特征如下：
 session_id,identifier  
 updatePassword,categorical  
 updatePaymentInfo,categorical  
@@ -127,8 +128,8 @@ num_recommendations
 num_rated  
 num_reviewed  
 num_searched 
-####7. 修改features_map.py，仅保留6的特征的处理代码
-####8. 重新执行工作流
+####2. 修改features_map.py，仅保留6的特征的处理代码
+####3. 重新执行工作流
 $ hadoop jar $STREAMING -D mapred.reduce.tasks=0 -D mapred.textoutputformat.separator=, -D stream.map.output.field.separator=, -mapper features_map.py -file features_map.py -input merged -output features2  
 $ hadoop fs -getmerge features2 features.csv  
 $ hadoop fs -rm features.csv  
@@ -137,7 +138,7 @@ $ ml summary --summary-file summary.json --header-file header.csv --format text 
 $ ml normalize --summary-file summary.json --format text --id-column 0 --transform Z --input-paths features.csv --output-path part2normalized --output-type avro  
 $ ml ksketch --format avro --input-paths part2normalized --output-file part2sketch.avro --points-per-iteration 1000 --iterations 10 --seed 1729  
 $ ml kmeans --input-file part2sketch.avro --centers-file part2centers.avro --clusters 40,60,80,100,120,140,160,180,200 --best-of 3 --seed 1729 --num-threads 1 --eval-details-file part2evaldetails.csv --eval-stats-file part2evalstats.csv  
-####9. 第八步的执行结果尚可，现在要一个一个增加特征，并查看特征增加后的效果，最后得到的特征集如下：
+####4. 第3步的执行结果尚可，现在要一个一个增加特征，并查看特征增加后的效果，最后得到的特征集如下：
 Actions (a feature for each, except login and logout)  
 Number of items played  
 Number of items browsed  
@@ -161,6 +162,6 @@ Number of queued items that were played
 Number of recent items that were played  
 Number of recent items that were reviewed  
 Number of recent items that were rated  
-####10. 用第九步的特征生成聚类
+###步骤7：用步骤6的特征生成聚类
 $ ml kassign --input-paths part2normalized --format avro --centers-file part2centers.avro --center-ids 22 --output-path part2assigned --output-type csv 
 $ hadoop fs -cat part2assigned/part\* | cut -d, -f1,3 > Task2Solution.csv
