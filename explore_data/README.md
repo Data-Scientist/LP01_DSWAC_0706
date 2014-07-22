@@ -183,7 +183,22 @@ $ hadoop fs -cat types/part-*|awk '{print $2}'|xargs -n1 grep -m 1 data.all.log 
 step4. Summarize the data
 --------------------------
 通过以上观察，我们发现每个json记录好像都有create_at, payload, type, user等field，那么是不是每个记录的结构都是如此呢？我们通过summary_map.py来解释这个问题。之所以选择python，是因为python对json支持非常友好，便于解析。
+我们的第一版程序非常简单：
+```
+#!/usr/bin/python
 
+import json
+import sys
+
+# Read all lines from stdin
+for line in sys.stdin:
+   # Parse the JSON
+   data = json.loads(line)
+
+   # Emit every field
+   for field in data.keys():
+      print field
+```
 运行以下命令，我们发现失败了
 ```
 $ hadoop jar $STREAMING -input data/heckle/ -input data/jeckle/ -output summary -mapper summary_map.py -file summary_map.py -reducer "uniq -c"  
@@ -204,5 +219,386 @@ packageJobJar: [../summary_map.py, /tmp/hadoop-training/hadoop-unjar504968780038
 13/10/23 11:12:18 INFO streaming.StreamJob: killJob...  
 Streaming Command Failed!  
 ```
+下面我们就来debug一下这个程序：
+打开Tracking URL，点击"map killed"中的任务，
+
+![fail1](img/fail1.png)
+
+我们看到
+
+![fail2](img/fail2.png)
+
+然后打开其中一个FAILED任务的last 8k logs
+
+![fail3](img/fail3.png)
+
+我们就看到了这个脚本在单机上跑出的错误日志。其实你可以把每一个mapper或reducer当成一个单机。
+日志显示，是json解析失败了。说明在众多的日志里面，有些记录可能json格式不正确，使得python解析失败。
+为了定位问题，我们只好加一个异常捕捉逻辑，将错误行打印出来，第二版脚本就是用来debug的：
+```
+#!/usr/bin/python
+
+import json
+import sys
+
+# Read all lines from stdin
+for line in sys.stdin:
+   try:
+      # Parse the JSON
+      data = json.loads(line)
+
+      # Emit every field
+      for field in data.keys():
+         print field
+   except ValueError:
+      # Log the error so we can see it
+      sys.stderr.write("%s\n" % line)
+      exit(1)
+```
+然后安装上面的方法，打开logs，我们终于看到了罪魁祸首，可能是这一行：
+```
+{"auth": "43c3d31:248951b9", "createdAt": "2013-05-12T00:00:00-08:00", "payload": {"itemId"": "39122", "marker": 1740}, "refId": "49308390", "sessionID": "6644c16e-08c9-4616-af7c-28679eb97868", "type": "Play", "user": 71056689, "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11"}
+```
+将这一行拷贝出来，运行如下命令，我们终于*复现*了错误信息：
+```
+$ python -mjson.tool < bad.json  
+Expecting : delimiter: line 1 column 91 (char 91) 
+```
+仔细观察会发现，在itermId后面多出了一个双引号，将它去掉再试一下：
+```
+$ sed 's/""/"/' bad.json|python -mjson.tool
+{
+    "auth": "43c3d31:248951b9",
+    "createdAt": "2013-05-12T00:00:00-08:00",
+    "payload": {
+        "itemId": "39122",
+        "marker": 1740
+    },
+    "refId": "49308390",
+    "sessionID": "6644c16e-08c9-4616-af7c-28679eb97868",
+    "type": "Play",
+    "user": 71056689,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11"
+}
+```
+可以看到，我们的debug还是在单机上执行的，大数据就是这么简单，当然可能确实有些繁琐。
+这样，第三版脚本如下：
+```
+#!/usr/bin/python
+
+import json
+import sys
+
+# Read all lines from stdin
+for line in sys.stdin:
+   try:
+      # Parse the JSON after fixing the quotes
+      data = json.loads(line.replace('""', '"'))
+
+      # Emit every field
+      for field in data.keys():
+         print field
+   except ValueError:
+      # Log the error so we can see it
+      sys.stderr.write("%s\n" % line)
+      exit(1)
+```
+删除刚才的输出路径，重跑分布式任务：
+```
+$ hadoop fs -rm -R summary                                    
+Moved: 'hdfs://localhost.localdomain:8020/user/cloudera/summary' to trash at: hdfs://localhost.localdomain:8020/user/cloudera/.Trash/Current  
+
+$ hadoop jar $STREAMING -input data/heckle/ -input data/jeckle/ -output summary -mapper summary_map.py -file summary_map.py -reducer "uniq -c"  
+packageJobJar: [../summary_map.py, /tmp/hadoop-training/hadoop-unjar5871949600019015687/] [] /var/folders/ll/xl67db9x2rs47q5fs4b255rr0000gp/T/streamjob6407431169321566655.jar tmpDir=null  
+13/10/23 13:23:56 WARN mapred.JobClient: Use GenericOptionsParser for parsing the arguments. Applications should implement Tool for the same.  
+13/10/23 13:23:56 INFO mapred.FileInputFormat: Total input paths to process : 20  
+13/10/23 13:23:56 INFO streaming.StreamJob: getLocalDirs(): [/tmp/hadoop-training/mapred/local]  
+13/10/23 13:23:56 INFO streaming.StreamJob: Running job: job_201310231802_0006  
+13/10/23 13:23:56 INFO streaming.StreamJob: To kill this job, run:  
+13/10/23 13:23:56 INFO streaming.StreamJob: /usr/bin/hadoop job  -Dmapred.job.tracker=192.168.56.101:8021 -kill job_201310231802_0006  
+13/10/23 13:23:56 INFO streaming.StreamJob: Tracking URL: http://localhost:50030/jobdetails.jsp?jobid=job_201310231802_0006  
+13/10/23 13:23:57 INFO streaming.StreamJob:  map 0%  reduce 0%  
+13/10/23 13:24:07 INFO streaming.StreamJob:  map 3%  reduce 0%  
+13/10/23 13:24:10 INFO streaming.StreamJob:  map 5%  reduce 0%  
+13/10/23 13:24:13 INFO streaming.StreamJob:  map 6%  reduce 0%  
+13/10/23 13:24:16 INFO streaming.StreamJob:  map 8%  reduce 0%  
+13/10/23 13:24:19 INFO streaming.StreamJob:  map 9%  reduce 0%  
+13/10/23 13:24:21 INFO streaming.StreamJob:  map 10%  reduce 0%  
+...  
+13/10/23 13:26:18 INFO streaming.StreamJob:  map 80%  reduce 23%  
+13/10/23 13:26:22 INFO streaming.StreamJob:  map 90%  reduce 23%  
+13/10/23 13:26:24 INFO streaming.StreamJob:  map 90%  reduce 30%  
+13/10/23 13:26:25 INFO streaming.StreamJob:  map 100%  reduce 30%  
+13/10/23 13:26:27 INFO streaming.StreamJob:  map 100%  reduce 33%  
+13/10/23 13:26:30 INFO streaming.StreamJob:  map 100%  reduce 74%  
+13/10/23 13:26:33 INFO streaming.StreamJob:  map 100%  reduce 91%  
+13/10/23 13:26:35 INFO streaming.StreamJob:  map 100%  reduce 100%  
+13/10/23 13:26:37 INFO streaming.StreamJob: Job complete: job_201310231802_0006  
+13/10/23 13:26:37 INFO streaming.StreamJob: Output: summary  
+```
+检查输出结果：
+```
+$ hadoop fs -cat summary/part\*  
+ 351712 auth  
+ 157151 craetedAt  
+ 194561 createdAt  
+ 261161 created_at  
+ 609352 payload  
+ 351712 refId  
+ 351712 sessionID  
+ 261161 session_id  
+ 612873 type  
+ 612873 user  
+ 351712 userAgent  
+ 261161 user_agent  
+```
+好了，现在可以回答之前的问题了，除了type和user之外，其他field都可能有missing value。
+另外，我们还有一个惊人发现：createdAt、sessionID和userAgent居然有多种field！
+所以，我们的经验就是，在处理海量数据的时候，你要做好各种思想准备，任何异常情况都可能出现！
 
 
+missing value我们解决不了，下面先把createdAt这几个field名称统一起来，
+同时加上type信息，看看每种type下面的field和subfield的到底如何分布。输出格式为：
+```
+type
+type:field
+type:field:subfiled[if have]
+```
+我们的第四版脚本如下
+```
+#!/usr/bin/python  
+import json  
+import sys  
+# Read all lines from stdin  
+for line in sys.stdin:
+   try:
+      # Parse the JSON after fixing the quotes
+      data = json.loads(line.replace('""', '"'))
+      for field in data.keys():  
+        if field == 'type':
+           # Just emit the type field when we see it
+           print "%s" % (data[field])
+        else:
+           # Normalize the file name
+           real = field
+           if real == 'user_agent':  
+              real = 'userAgent'  
+           elif real == 'session_id':  
+              real = 'sessionID'  
+           elif real == 'created_at' or real == 'craetedAt':  
+              real = 'createdAt'
+           # Emit the normalized field
+           print "%s:%s" % (data['type'], real) 
+           # Emit all subfields, if there are any
+           if type(data[field]) is dict:
+              for subfield in data[field]:  
+                 print "%s:%s:%s" % (data['type'], real, subfield)
+   except ValueError:
+      # Log the error so we can see it
+      sys.stderr.write("%s\n" % line)
+      exit(1)  
+```
+跑完之后，结果如下：
+```
+$ hadoop jar $STREAMING -input data/heckle/ -input data/jeckle/ -output summary2 -mapper summary_map.py -file summary_map.py -reducer "uniq -c"  
+
+packageJobJar: [../summary_map.py, /tmp/hadoop-training/hadoop-unjar5795014006503167150/] [] /var/folders/ll/xl67db9x2rs47q5fs4b255rr0000gp/T/streamjob3395742458965177272.jar tmpDir=null  
+13/10/23 15:11:56 WARN mapred.JobClient: Use GenericOptionsParser for parsing the arguments. Applications should implement Tool for the same.  
+13/10/23 15:11:56 INFO mapred.FileInputFormat: Total input paths to process : 20  
+13/10/23 15:11:56 INFO streaming.StreamJob: getLocalDirs(): [/tmp/hadoop-training/mapred/local]  
+13/10/23 15:11:56 INFO streaming.StreamJob: Running job: job_201310231802_0007  
+13/10/23 15:11:56 INFO streaming.StreamJob: To kill this job, run:  
+13/10/23 15:11:56 INFO streaming.StreamJob: /usr/bin/hadoop job  -Dmapred.job.tracker=localhost:8021 -kill job_201310231802_0007  
+13/10/23 15:11:56 INFO streaming.StreamJob: Tracking URL: http://localhost:50030/jobdetails.jsp?jobid=job_201310231802_0007  
+13/10/23 15:11:57 INFO streaming.StreamJob:  map 0%  reduce 0%  
+13/10/23 15:12:07 INFO streaming.StreamJob:  map 3%  reduce 0%  
+13/10/23 15:12:10 INFO streaming.StreamJob:  map 4%  reduce 0%  
+...  
+13/10/23 15:14:41 INFO streaming.StreamJob:  map 100%  reduce 33%  
+13/10/23 15:14:44 INFO streaming.StreamJob:  map 100%  reduce 71%  
+13/10/23 15:14:47 INFO streaming.StreamJob:  map 100%  reduce 87%  
+13/10/23 15:14:51 INFO streaming.StreamJob:  map 100%  reduce 100%  
+13/10/23 15:14:52 INFO streaming.StreamJob: Job complete: job_201310231802_0007  
+13/10/23 15:14:52 INFO streaming.StreamJob: Output: summary2  
+
+
+$ hadoop fs -cat summary2/part\*
+    177 Account
+     99 Account:auth
+    177 Account:createdAt
+    177 Account:payload
+    134 Account:payload:new
+    134 Account:payload:old
+    177 Account:payload:subAction
+     99 Account:refId
+    177 Account:sessionID
+    177 Account:user
+    177 Account:userAgent
+   5091 AddToQueue
+   2919 AddToQueue:auth
+   5091 AddToQueue:createdAt
+   5091 AddToQueue:payload
+   2919 AddToQueue:payload:itemId
+   2172 AddToQueue:payload:item_id
+   2919 AddToQueue:refId
+   5091 AddToQueue:sessionID
+   5091 AddToQueue:user
+   5091 AddToQueue:userAgent
+   3062 Advance
+   3062 Advance:createdAt
+   3062 Advance:payload
+   3062 Advance:payload:item_id
+   3062 Advance:payload:marker
+   3062 Advance:sessionID
+   3062 Advance:user
+   3062 Advance:userAgent
+   5425 Home
+   3109 Home:auth
+   5425 Home:createdAt
+   5425 Home:payload
+   5425 Home:payload:popular
+   5425 Home:payload:recent
+   5425 Home:payload:recommended
+   3109 Home:refId
+   5425 Home:sessionID
+   5425 Home:user
+   5425 Home:userAgent  
+  19617 Hover  
+  11376 Hover:auth  
+  19617 Hover:createdAt  
+  19617 Hover:payload  
+  11376 Hover:payload:itemId
+   8241 Hover:payload:item_id  
+  11376 Hover:refId  
+  19617 Hover:sessionID  
+  19617 Hover:user  
+  19617 Hover:userAgent
+    274 ItemPage
+    154 ItemPage:auth
+    274 ItemPage:createdAt
+    274 ItemPage:payload
+    154 ItemPage:payload:itemId
+    120 ItemPage:payload:item_id
+    154 ItemPage:refId
+    274 ItemPage:sessionID
+    274 ItemPage:user
+    274 ItemPage:userAgent
+   1057 Login
+    603 Login:auth
+   1057 Login:createdAt
+    603 Login:refId
+   1057 Login:sessionID
+   1057 Login:user
+   1057 Login:userAgent
+   1018 Logout
+    571 Logout:auth
+   1018 Logout:createdAt
+    571 Logout:refId
+   1018 Logout:sessionID
+   1018 Logout:user
+   1018 Logout:userAgent
+   4424 Pause
+   2543 Pause:auth
+   4424 Pause:createdAt
+   4424 Pause:payload
+   2543 Pause:payload:itemId
+   1881 Pause:payload:item_id
+   4424 Pause:payload:marker
+   2543 Pause:refId
+   4424 Pause:sessionID
+   4424 Pause:user
+   4424 Pause:userAgent  
+ 558568 Play  
+ 323244 Play:auth  
+ 558568 Play:createdAt  
+ 558568 Play:payload  
+ 307805 Play:payload:itemId  
+ 235324 Play:payload:item_id  
+ 543129 Play:payload:marker  
+ 323244 Play:refId  
+ 558568 Play:sessionID  
+ 558568 Play:user  
+ 558568 Play:userAgent
+    164 Position
+    164 Position:createdAt
+    164 Position:payload
+    164 Position:payload:item_id
+    164 Position:payload:marker
+    164 Position:sessionId
+    164 Position:user
+    164 Position:userAgent
+   1313 Queue
+    735 Queue:auth
+   1313 Queue:createdAt
+    735 Queue:refId
+   1313 Queue:sessionID
+   1313 Queue:user
+   1313 Queue:userAgent
+    652 Rate
+    387 Rate:auth
+    652 Rate:createdAt
+    652 Rate:payload
+    387 Rate:payload:itemId
+    265 Rate:payload:item_id
+    652 Rate:payload:rating
+    387 Rate:refId
+    652 Rate:sessionID
+    652 Rate:user
+    652 Rate:userAgent
+   1344 Recommendations
+    784 Recommendations:auth
+   1344 Recommendations:createdAt
+   1344 Recommendations:payload
+   1344 Recommendations:payload:recs
+    784 Recommendations:refId
+   1344 Recommendations:sessionID
+   1344 Recommendations:user
+   1344 Recommendations:userAgent
+   1774 Resume
+   1774 Resume:createdAt
+   1774 Resume:payload
+   1774 Resume:payload:item_id
+   1774 Resume:payload:marker
+   1774 Resume:sessionId
+   1774 Resume:user
+   1774 Resume:userAgent
+   1328 Search
+    769 Search:auth
+   1328 Search:createdAt
+   1328 Search:payload
+   1328 Search:payload:results
+    769 Search:refId
+   1328 Search:sessionID
+   1328 Search:user
+   1328 Search:userAgent
+   7178 Stop
+   4187 Stop:auth
+   7178 Stop:createdAt
+   7178 Stop:payload
+   4187 Stop:payload:itemId
+   2991 Stop:payload:item_id
+   7178 Stop:payload:marker
+   4187 Stop:refId
+   7178 Stop:sessionID
+   7178 Stop:user
+   7178 Stop:userAgent
+    133 VerifyPassword
+     78 VerifyPassword:auth
+    133 VerifyPassword:createdAt
+     78 VerifyPassword:refId
+    133 VerifyPassword:sessionID
+    133 VerifyPassword:user
+    133 VerifyPassword:userAgent
+    274 WriteReview
+    154 WriteReview:auth
+    274 WriteReview:createdAt
+    274 WriteReview:payload
+    154 WriteReview:payload:itemId
+    120 WriteReview:payload:item_id
+    274 WriteReview:payload:length
+    274 WriteReview:payload:rating
+    154 WriteReview:refId
+    274 WriteReview:sessionID
+    274 WriteReview:user
+    274 WriteReview:userAgent 
+```
