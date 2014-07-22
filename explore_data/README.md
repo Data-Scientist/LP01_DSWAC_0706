@@ -149,7 +149,9 @@ $hadoop fs -cat types/part-*|awk '{sum += $1}END{print sum}'
 612873
 ```
 然后打开刚才任务日志的Tracking Url，观察map input records，发现也是612873，说明type没有missing value
-[map input records](img/jobview.png)
+
+![map input records](img/jobview.png)
+
 确定了event的种类后，就是观察一下每种event的json形式：
 通过观察payload携带的信息，我们可以对每种event有更清楚地认识，
 比如：
