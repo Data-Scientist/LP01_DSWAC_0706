@@ -255,7 +255,7 @@ for line in sys.stdin:
       sys.stderr.write("%s\n" % line)
       exit(1)
 ```
-然后安装上面的方法，打开logs，我们终于看到了罪魁祸首，可能是这一行：
+然后按照上面的方法，打开logs，我们终于看到了罪魁祸首，可能是这一行：
 ```
 {"auth": "43c3d31:248951b9", "createdAt": "2013-05-12T00:00:00-08:00", "payload": {"itemId"": "39122", "marker": 1740}, "refId": "49308390", "sessionID": "6644c16e-08c9-4616-af7c-28679eb97868", "type": "Play", "user": 71056689, "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11"}
 ```
@@ -281,7 +281,8 @@ $ sed 's/""/"/' bad.json|python -mjson.tool
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_7) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11"
 }
 ```
-可以看到，我们的debug还是在单机上执行的，大数据就是这么简单，当然可能确实有些繁琐。
+貌似没问题了。哈哈。
+可以看到，我们大部分的debug工作还是在单机上跑，大数据就是这么简单，当然可能确实有些繁琐。
 这样，第三版脚本如下：
 ```
 #!/usr/bin/python
