@@ -359,7 +359,7 @@ $ hadoop fs -cat summary/part\*
 
 
 missing value我们解决不了，下面先把createdAt这几个field名称统一起来，
-同时加上type信息，看看每种type下面的field和subfield的到底如何分布。输出格式为：
+同时，我们要进一步加上type信息和subfield信息，看看每种type下面的field和subfield到底如何分布。输出格式为：
 ```
 type
 type:field
@@ -603,3 +603,56 @@ $ hadoop fs -cat summary2/part\*
     274 WriteReview:user
     274 WriteReview:userAgent 
 ```
+然后，我们从上往下对数据进行逐一分析，比如对于type Account:
+```
+    177 Account
+     99 Account:auth
+    177 Account:createdAt
+    177 Account:payload
+    134 Account:payload:new
+    134 Account:payload:old
+    177 Account:payload:subAction
+     99 Account:refId
+    177 Account:sessionID
+    177 Account:user
+    177 Account:userAgent
+```
+最上面表示Account一共出现的次数177，下面所有field和subfield都不应该大于177。可以看到，createdAt、payload、sessionID、user和userAgent在每个Account记录里面都存在，而auth、refID有的会丢失。同时，丢失的次数还是一样的。
+在payload的subfile里面，subAction都会出现，但是new、old有丢失，而且丢失次数一样。
+
+以同样的方式去观察AddToQueue：
+```
+   5091 AddToQueue
+   2919 AddToQueue:auth
+   5091 AddToQueue:createdAt
+   5091 AddToQueue:payload
+   2919 AddToQueue:payload:itemId
+   2172 AddToQueue:payload:item_id
+   2919 AddToQueue:refId
+   5091 AddToQueue:sessionID
+   5091 AddToQueue:user
+   5091 AddToQueue:userAgent
+```
+我们发现，auth和refId也是丢失了同样的次数，另外itemId也出现了camel和snake两种形式。同时，camel的出现次数和auth、refId居然还一样。
+继续以同样方式观察所有event，我们可以得到这样的几个结论：
+    1. payload里面的itemId也有snake形式：item_id。当然为了验证其他subfield是否也这样，可以执行grep验证一下
+```
+$ hadoop fs -cat summary2/part-* > type_subtype
+$ grep "payload" type_subtype |awk -F':' '{print $NF}'|sort |uniq -c
+   8 itemId	
+  11 item_id	
+   1 length	
+   6 marker	
+   1 new	
+   1 old	
+  15 payload	
+   1 popular	
+   2 rating	
+   1 recent	
+   1 recommended	
+   1 recs	
+   1 results	
+   1 subAction
+``` 
+    2. auth和refId在某些event里面会同时丢失，丢失次数跟itemId（camel形式）的次数居然也吻合。
+    3. 在“Queue,” “Login,” “Logout,”和“VerifyPassword”中，payload都没有
