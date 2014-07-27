@@ -675,7 +675,7 @@ type:other_field:subfield	feature
   5. 如果set里面元素太多，则认为是identifier，把set置空，只输出count
 
 具体代码如下
-```
+```python
 # summary_map.py
 
 #!/usr/bin/python
