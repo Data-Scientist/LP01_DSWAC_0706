@@ -845,4 +845,213 @@ for line in sys.stdin:
 # Print the summary for the last key
 print_summary()
 ```
+输出结果如下：
+```
+Account - 177	
+Account:auth - identifier, count: 99	
+Account:createdAt - min: 2013-05-06 08:02:56+00:00, max 2013-05-12 23:06:11-08:00, count: 177	
+Account:payload - 177	
+Account:payload:new - ['kid'], count: 134	
+Account:payload:old - ['adult'], count: 134	
+Account:payload:subAction - ['updatePassword', 'parentalControls', 'updatePaymentInfo'], count: 177	
+Account:refId - identifier, count: 99	
+Account:sessionID - identifier, count: 177	
+Account:user - min: 1634306, max 99314647, average: 47623573.86, count: 177	
+Account:userAgent - identifier, count: 177	
+AddToQueue - 5091	
+AddToQueue:auth - identifier, count: 2919	
+AddToQueue:createdAt - min: 2013-05-06 08:00:32+00:00, max 2013-05-12 23:57:46-08:00, count: 5091	
+AddToQueue:payload - 5091	
+AddToQueue:payload:itemId - identifier, count: 5091	
+AddToQueue:refId - identifier, count: 2919	
+AddToQueue:sessionID - identifier, count: 5091	
+AddToQueue:user - min: 1169676, max 99985450, average: 50609784.80, count: 5091	
+AddToQueue:userAgent - identifier, count: 5091	
+Advance - 3062	
+Advance:createdAt - min: 2013-05-06 08:02:10+00:00, max 2013-05-09 07:27:37+00:00, count: 3062	
+Advance:payload - 3062	
+Advance:payload:itemId - identifier, count: 3062	
+Advance:payload:marker - min: 0, max 8491, average: 2085.52, count: 3062	
+Advance:sessionID - identifier, count: 3062	
+Advance:user - min: 1091145, max 99856025, average: 51177856.67, count: 3062	
+Advance:userAgent - identifier, count: 3062	
+Home - 5425	
+Home:auth - identifier, count: 3109	
+Home:createdAt - min: 2013-05-06 08:00:08+00:00, max 2013-05-12 23:57:18-08:00, count: 5425	
+Home:payload - 5425	
+Home:payload:popular - identifier, count: 5425	
+Home:payload:recent - identifier, count: 5425	
+Home:payload:recommended - identifier, count: 5425	
+Home:refId - identifier, count: 3109	
+Home:sessionID - identifier, count: 5425	
+Home:user - min: 1091145, max 99985450, average: 49984786.82, count: 5425	
+Home:userAgent - identifier, count: 5425	
+Hover - 19617	
+Hover:auth - identifier, count: 11376	
+Hover:createdAt - min: 2013-05-06 08:00:18+00:00, max 2013-05-12 23:58:08-08:00, count: 19617	
+Hover:payload - 19617	
+Hover:payload:itemId - identifier, count: 19617	
+Hover:refId - identifier, count: 11376	
+Hover:sessionID - identifier, count: 19617	
+Hover:user - min: 1091145, max 99985450, average: 50158191.38, count: 19617	
+Hover:userAgent - identifier, count: 19617	
+ItemPage - 274	
+ItemPage:auth - identifier, count: 154	
+ItemPage:createdAt - min: 2013-05-06 08:02:15+00:00, max 2013-05-12 23:34:12-08:00, count: 274	
+ItemPage:payload - 274	
+ItemPage:payload:itemId - identifier, count: 274	
+ItemPage:refId - identifier, count: 154	
+ItemPage:sessionID - identifier, count: 274	
+ItemPage:user - min: 1263067, max 99270605, average: 49770339.91, count: 274	
+ItemPage:userAgent - identifier, count: 274	
+Login - 1057	
+Login:auth - identifier, count: 603	
+Login:createdAt - min: 2013-05-06 08:01:42+00:00, max 2013-05-12 23:36:07-08:00, count: 1057	
+Login:refId - identifier, count: 603	
+Login:sessionID - identifier, count: 1057	
+Login:user - min: 1091145, max 99856025, average: 49325068.51, count: 1057	
+Login:userAgent - identifier, count: 1057	
+Logout - 1018	
+Logout:auth - identifier, count: 571	
+Logout:createdAt - min: 2013-05-06 08:13:44+00:00, max 2013-05-12 23:59:15-08:00, count: 1018	
+Logout:refId - identifier, count: 571	
+Logout:sessionID - identifier, count: 1018	
+Logout:user - min: 1091145, max 99985450, average: 48915219.96, count: 1018	
+Logout:userAgent - identifier, count: 1018	
+Pause - 4424	
+Pause:auth - identifier, count: 2543	
+Pause:createdAt - min: 2013-05-06 08:00:49+00:00, max 2013-05-12 23:57:22-08:00, count: 4424	
+Pause:payload - 4424	
+Pause:payload:itemId - identifier, count: 4424	
+Pause:payload:marker - min: 1, max 7215, average: 2207.71, count: 4424	
+Pause:refId - identifier, count: 2543	
+Pause:sessionID - identifier, count: 4424	
+Pause:user - min: 1091145, max 99985450, average: 50103317.24, count: 4424	
+Pause:userAgent - identifier, count: 4424	
+Play - 558568	
+Play:auth - identifier, count: 323244	
+Play:createdAt - min: 2013-05-06 08:00:01+00:00, max 2013-05-12 23:59:59-08:00, count: 558568	
+Play:payload - 558568	
+Play:payload:itemId - identifier, count: 543129	
+Play:payload:marker - min: 0, max 8525, average: 2138.50, count: 543129	
+Play:refId - identifier, count: 323244	
+Play:sessionID - identifier, count: 558568	
+Play:user - min: 1091145, max 99985450, average: 50192151.13, count: 558568	
+Play:userAgent - identifier, count: 558568	
+Position - 164	
+Position:createdAt - min: 2013-05-06 08:25:34+00:00, max 2013-05-09 07:02:48+00:00, count: 164	
+Position:payload - 164	
+Position:payload:itemId - identifier, count: 164	
+Position:payload:marker - min: 0, max 6690, average: 2358.18, count: 164	
+Position:sessionID - identifier, count: 164	
+Position:user - min: 1091145, max 99413523, average: 49317538.82, count: 164	
+Position:userAgent - identifier, count: 164	
+Queue - 1313	
+Queue:auth - identifier, count: 735	
+Queue:createdAt - min: 2013-05-06 08:01:21+00:00, max 2013-05-12 23:36:31-08:00, count: 1313	
+Queue:refId - identifier, count: 735	
+Queue:sessionID - identifier, count: 1313	
+Queue:user - min: 1091145, max 99806989, average: 50424708.80, count: 1313	
+Queue:userAgent - identifier, count: 1313	
+Rate - 652	
+Rate:auth - identifier, count: 387	
+Rate:createdAt - min: 2013-05-06 08:03:32+00:00, max 2013-05-12 23:36:08-08:00, count: 652	
+Rate:payload - 652	
+Rate:payload:itemId - identifier, count: 652	
+Rate:payload:rating - min: 1, max 5, average: 3.54, count: 652	
+Rate:refId - identifier, count: 387	
+Rate:sessionID - identifier, count: 652	
+Rate:user - min: 1091145, max 99314647, average: 49635732.38, count: 652	
+Rate:userAgent - identifier, count: 652	
+Recommendations - 1344	
+Recommendations:auth - identifier, count: 784	
+Recommendations:createdAt - min: 2013-05-06 08:00:56+00:00, max 2013-05-12 23:58:00-08:00, count: 1344	
+Recommendations:payload - 1344	
+Recommendations:payload:recs - identifier, count: 1344	
+Recommendations:refId - identifier, count: 784	
+Recommendations:sessionID - identifier, count: 1344	
+Recommendations:user - min: 1091145, max 99985450, average: 50165065.09, count: 1344	
+Recommendations:userAgent - identifier, count: 1344	
+Resume - 1774	
+Resume:createdAt - min: 2013-05-06 08:02:04+00:00, max 2013-05-09 07:31:48+00:00, count: 1774	
+Resume:payload - 1774	
+Resume:payload:itemId - identifier, count: 1774	
+Resume:payload:marker - min: 0, max 6917, average: 2250.60, count: 1774	
+Resume:sessionID - identifier, count: 1774	
+Resume:user - min: 1091145, max 99985450, average: 51027539.16, count: 1774	
+Resume:userAgent - identifier, count: 1774	
+Search - 1328	
+Search:auth - identifier, count: 769	
+Search:createdAt - min: 2013-05-06 08:02:11+00:00, max 2013-05-12 23:36:56-08:00, count: 1328	
+Search:payload - 1328	
+Search:payload:results - identifier, count: 1328	
+Search:refId - identifier, count: 769	
+Search:sessionID - identifier, count: 1328	
+Search:user - min: 1170207, max 99976229, average: 50523812.45, count: 1328	
+Search:userAgent - identifier, count: 1328	
+Stop - 7178	
+Stop:auth - identifier, count: 4187	
+Stop:createdAt - min: 2013-05-06 08:04:10+00:00, max 2013-05-12 23:55:49-08:00, count: 7178	
+Stop:payload - 7178	
+Stop:payload:itemId - identifier, count: 7178	
+Stop:payload:marker - min: 172, max 8233, average: 2692.93, count: 7178	
+Stop:refId - identifier, count: 4187	
+Stop:sessionID - identifier, count: 7178	
+Stop:user - min: 1091145, max 99976229, average: 49769162.34, count: 7178	
+Stop:userAgent - identifier, count: 7178	
+VerifyPassword - 133	
+VerifyPassword:auth - identifier, count: 78	
+VerifyPassword:createdAt - min: 2013-05-06 10:02:24+00:00, max 2013-05-12 23:02:33-08:00, count: 133	
+VerifyPassword:refId - identifier, count: 78	
+VerifyPassword:sessionID - identifier, count: 133	
+VerifyPassword:user - min: 1634306, max 99314647, average: 47262951.69, count: 133	
+VerifyPassword:userAgent - identifier, count: 133	
+WriteReview - 274	
+WriteReview:auth - identifier, count: 154	
+WriteReview:createdAt - min: 2013-05-06 08:11:46+00:00, max 2013-05-12 23:38:58-08:00, count: 274	
+WriteReview:payload - 274	
+WriteReview:payload:itemId - identifier, count: 274	
+WriteReview:payload:length - min: 52, max 1192, average: 627.63, count: 274	
+WriteReview:payload:rating - min: 1, max 5, average: 4.03, count: 274	
+WriteReview:refId - identifier, count: 154	
+WriteReview:sessionID - identifier, count: 274	
+WriteReview:user - min: 1263067, max 99270605, average: 49770339.91, count: 274	
+WriteReview:userAgent - identifier, count: 274	
+```
 
+下面我们就需要对这份数据进行分析了，我们发现：
+  1. user id都是整数，范围在1,000,000到100,000,000之间
+  2. item id是identifier，不是整数
+  3. 对item rating的平均值是3.5，写了review的rating平均值是4。说明用户如果给一个item写了review，评分将偏高。
+  4. Account的subAction有3种：update password, update payment info, and parental controls
+  5. 从Account的payload中，可以发现，new总是kid，old总是adult。说明只有enable parent control被记录下来，取消parent control事件没有记录
+  6. 所有的field和subfield都是归一化的了
+  7. 在play事件中，不是所有的item id和marker都被记录了，而且他们missing的个数是一样的。
+
+ 
+step5. Determine distinct users and account action details
+--------------------------
+为了方便后续的cluster和classification，我们先统计一下和user、session相关的数据。
+最基本的，统计一下user和session的count。
+这时候，我们可以重用`grep_field.sh`脚本。注意，因为hadoop不能直接使用脚本，所以reducer中需要bash -c修饰一下
+```
+$ hadoop jar $STREAMING -D stream.non.zero.exit.is.failure=false -input data/heckle/ -input data/jeckle/ -output users -mapper "grep_field.sh user" -file grep_field.sh -reducer 'bash -c "uniq | wc -l"'  
+...  
+$ hadoop fs -cat users/part\*                                                                                                           2195  
+$ hadoop jar $STREAMING -D stream.non.zero.exit.is.failure=false -input data/heckle/ -input data/jeckle/ -output sessions -mapper 'grep_field.sh session(ID|_id)' -file grep_field.sh -reducer 'bash -c "uniq | wc -l"'  
+…  
+$ hadoop fs -cat sessions/part\*
+    5308 
+```
+
+从刚才的统计中，我们发现parentalControls里面new只有kid，为了验证我们刚才脚本的正确性，我们double check一下：
+```
+$ hadoop jar $STREAMING -D stream.non.zero.exit.is.failure=false -input data/heckle/ -input data/jeckle/ -output new -mapper "grep_field.sh new" -file grep_field.sh -reducer uniq  
+…  
+$ hadoop fs -cat new/part\*  
+kid  
+```
+ok~ 看来我们刚才的结论没错。
+
+现在，我们对数据的exploring就算结束了，我们对数据的认识也非常深刻了。
+下面可以进行cluster和classification了。
