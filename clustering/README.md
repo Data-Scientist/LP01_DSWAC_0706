@@ -1,4 +1,8 @@
-## K-Means
+## 说明
+
+这一部是由Lynn负责的，我这里只说明一下背后使用的算法，其它关于聚类的内容参见Lynn的[Clustering the Session](https://github.com/Data-Scientist/LP01_DSWAC_0706/tree/master/Clustering%20the%20Sessions)。
+
+## K Means
 
 [k-means](http://en.wikipedia.org/wiki/K-means_clustering)算法是最流行的数据挖掘算法之一，
 算法也非常的简单，引用[Scalable K-Means++](http://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
