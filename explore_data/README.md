@@ -659,3 +659,190 @@ $ grep "payload" type_subtype |awk -F':' '{print $NF}'|sort |uniq -c
     2. auth和refId在某些event里面会同时丢失，丢失次数跟itemId（camel形式）的次数居然也吻合。
 
     3. 在“Queue,” “Login,” “Logout,”和“VerifyPassword”中，payload都没有
+
+现在我们对数据有了更进一步的认识，但是直到现在我们统计的都是field，field下面的特征我们还没有任何统计。最终版就是要统计这些特征的分布，同时，根据我们刚才的观察结论，我们要对field名称做进一步统一。
+我们的第五版脚本比较长，而且我们需要一个reducer进行统计。首先，map的输出是：
+```
+type
+type:subfield
+type:other_field:subfield	feature
+```
+然后，reducer的作用大体是这样的：
+  1. 如果是前2种，没有feature，则认为是header，统计header的count；
+  2. 如果是date，输出min、max和count
+  3. 如果是num(int)，输出min、max、avg和count
+  4. 如果以上都不是，则认为是category，把feature存到set里面，输出set里面的所有值和count
+  5. 如果set里面元素太多，则认为是identifier，把set置空，只输出count
+
+具体代码如下
+```
+# summary_map.py
+
+#!/usr/bin/python
+
+import json
+import sys
+
+# Read all lines from stdin
+for line in sys.stdin:
+   try:
+      # Parse the JSON after fixing the quotes
+      data = json.loads(line.replace('""', '"'))
+
+      for field in data.keys():
+         if field == 'type':
+            # Just emit the type field when we see it
+            print "%s" % (data[field])
+         else:
+            # Normalize the file name
+            real = field
+
+            if real == 'user_agent':
+               real = 'userAgent'
+            elif real == 'session_id':
+               real = 'sessionID'
+            elif real == 'created_at' or real == 'craetedAt':
+               real = 'createdAt'
+
+            # Emit all subfields, if there are any
+            if type(data[field]) is dict:
+               print "%s:%s" % (data['type'], real)
+
+               # Normalize and print the subfields
+               for subfield in data[field]:
+                  subreal = subfield
+
+                  if subreal == 'item_id':
+                     subreal = 'itemId'
+                  
+                  print "%s:%s:%s\t%s" % (data['type'], real, subreal, data[field][subfield])
+            else:
+               # Emit the normalized field
+               print "%s:%s\t%s" % (data['type'], real, data[field])
+
+   except ValueError:
+      # Log the error so we can see it
+      sys.stderr.write("%s\n" % line)
+      exit(1)
+
+# summary_reduce.py
+
+#!/usr/bin/python
+
+import dateutil.parser
+import re
+import sys
+
+"""
+Figure out what type the field is and print appropriate summary stats.
+"""
+def print_summary():
+   if is_heading:
+      print "%s[head] - %d" % (last, count)
+   elif is_date:
+      print "%s[date] - min: %s, max %s, count: %d" % (last, min, max, count)
+   elif is_number:
+      print "%s[number] - min: %d, max %d, average: %.2f, count: %d" % (last, min, max, float(sum)/count, count)
+   elif is_value:
+      print "%s[value] - %s, count: %d" % (last, list(values), count)
+   else:
+      print "%s[identifier] - identifier, count: %d" % (last, count)
+
+last = None
+values = set()
+is_date = True
+is_number = False
+is_value = False
+is_heading = True
+min = None
+max = None
+sum = 0
+count = 0
+
+# Pattern to match a date time field
+date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})')
+
+# Read all lines from stdin
+for line in sys.stdin:
+   # Split on tab. The first part is the key. The second is the value.
+   parts = line.strip().split('\t')
+
+   if parts[0] != last:
+      # If there's a previous key, print its summary
+      if last != None:
+         print_summary()
+
+      # Reset all the summary stats variables
+      last = parts[0]
+      values = set()
+      is_date = True
+      is_number = False
+      is_identifier = False
+      is_heading = True
+      min = None
+      max = None
+      sum = 0
+      count = 0
+
+   # Increment the number of times we've seen the field
+   count += 1
+
+   # If there was a value of non-zero length, process it
+   if len(parts) > 1 and len(parts[1]) > 0:
+      is_heading = False
+
+      # If we think it's a date, test if this value parses as a date
+      if is_date:
+         if date_pattern.match(parts[1]):
+            try:
+               tstamp = dateutil.parser.parse(parts[1])
+
+               # If it does, update the summary stats.
+               if min == None or tstamp < min:
+                  min = tstamp
+
+               if max == None or tstamp > max:
+                  max = tstamp
+            except (TypeError, ValueError):
+               # If it doesn't parse, then assume it's a number
+               is_date = False
+               is_number = True
+               min = None
+               max = None
+         else:
+            # If it doesn't match, then assume it's a number
+            is_date = False
+            is_number = True
+            min = None
+            max = None
+            
+      # If we think it's a number, test it this value parses as a number
+      if is_number:
+         try:
+            num = int(parts[1])
+            sum += num
+
+            # If so, update the summary stats
+            if min == None or num < min:
+               min = num
+
+            if max == None or num > max:
+               max = num
+         except ValueError:
+            # If not, assume it's categorical
+            is_number = False
+            is_value = True
+
+      # If we think it's categorical, and this value to the category set
+      if is_value:
+         values.add(parts[1])
+
+         # If there are too many categories, call it an identifier
+         if len(values) > 10:
+            is_value = False
+            values = None
+
+# Print the summary for the last key
+print_summary()
+```
+
