@@ -184,7 +184,7 @@ step4. Summarize the data
 --------------------------
 通过以上观察，我们发现每个json记录好像都有create_at, payload, type, user等field，那么是不是每个记录的结构都是如此呢？我们通过summary_map.py来解释这个问题。之所以选择python，是因为python对json支持非常友好，便于解析。
 我们的第一版程序非常简单：
-```
+```python
 #!/usr/bin/python
 
 import json
@@ -235,7 +235,7 @@ Streaming Command Failed!
 我们就看到了这个脚本在单机上跑出的错误日志。其实你可以把每一个mapper或reducer当成一个单机。
 日志显示，是json解析失败了。说明在众多的日志里面，有些记录可能json格式不正确，使得python解析失败。
 为了定位问题，我们只好加一个异常捕捉逻辑，将错误行打印出来，第二版脚本就是用来debug的：
-```
+```python
 #!/usr/bin/python
 
 import json
@@ -284,7 +284,7 @@ $ sed 's/""/"/' bad.json|python -mjson.tool
 貌似没问题了。哈哈。
 可以看到，我们大部分的debug工作还是在单机上跑，大数据就是这么简单，当然可能确实有些繁琐。
 这样，第三版脚本如下：
-```
+```python
 #!/usr/bin/python
 
 import json
@@ -366,7 +366,7 @@ type:field
 type:field:subfiled[if have]
 ```
 我们的第四版脚本如下
-```
+```python
 #!/usr/bin/python  
 import json  
 import sys  
