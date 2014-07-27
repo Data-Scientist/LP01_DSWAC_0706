@@ -635,6 +635,7 @@ $ hadoop fs -cat summary2/part\*
 ```
 我们发现，auth和refId也是丢失了同样的次数，另外itemId也出现了camel和snake两种形式。同时，camel的出现次数和auth、refId居然还一样。
 继续以同样方式观察所有event，我们可以得到这样的几个结论：
+    
     1. payload里面的itemId也有snake形式：item_id。当然为了验证其他subfield是否也这样，可以执行grep验证一下
 ```
 $ hadoop fs -cat summary2/part-* > type_subtype
@@ -654,5 +655,7 @@ $ grep "payload" type_subtype |awk -F':' '{print $NF}'|sort |uniq -c
    1 results	
    1 subAction
 ``` 
+
     2. auth和refId在某些event里面会同时丢失，丢失次数跟itemId（camel形式）的次数居然也吻合。
+
     3. 在“Queue,” “Login,” “Logout,”和“VerifyPassword”中，payload都没有
