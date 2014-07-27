@@ -1,7 +1,3 @@
-## 说明
-
-这一部是由Lynn负责的，我这里只说明一下背后使用的算法，其它关于聚类的内容参见Lynn的[Clustering the Session](https://github.com/Data-Scientist/LP01_DSWAC_0706/tree/master/Clustering%20the%20Sessions)。
-
 ## K Means
 
 [k-means](http://en.wikipedia.org/wiki/K-means_clustering)算法是最流行的数据挖掘算法之一，
@@ -94,7 +90,8 @@ Prediction Strength就可以做到这一点，下面来说明一下这个算法�
 
 ![ps](http://heming-keh.github.io/assets/images/2014/07/25/kmeans/ps.png)
 
-这种方法为什么可行，看上图。第一行，k值选对了，这样training set和test set的聚类结果就会非常相似，
+这种方法为什么可行，看上图（图片来自[Clustering VAlidation by Prediction Strength](https://www.stat.washington.edu/wxs/Stat592-w2011/Literature/tibshirani-walther-prediction-strength-2005.pdf)）。
+第一行，k值选对了，这样training set和test set的聚类结果就会非常相似，
 使用training set训练出的classifier，就能很好的predicted测试集合中的数据。
 第二行，k值选错了，这样聚类的结果差别就会很大，使用training set训练出来的数据就不能很好的predicted测试集合中的数据。
 
@@ -129,4 +126,8 @@ ml kassign --input-paths part2normalized --format avro
 
 这一步，才是使用传统的k-means算法来进行聚类。
 
+
+## 说明
+
+这一部是由Lynn负责的，我这里只说明一下背后使用的算法，其它关于聚类的内容参见Lynn的[Clustering the Session](https://github.com/Data-Scientist/LP01_DSWAC_0706/tree/master/Clustering%20the%20Sessions)。
 
