@@ -74,3 +74,7 @@ sbt package
 ```
 
 `classify`表示要进行分类计算，`solution`是生成解的存放文件，其它同上。
+
+## Clustering the Sessions
+
+这周时间有限，只实现了很少的一点代码，下周可能时间也不会太多，下下周估计会好一些。
