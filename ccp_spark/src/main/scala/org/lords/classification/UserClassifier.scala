@@ -10,6 +10,7 @@ import org.apache.spark.rdd.RDD
 import scala.util.parsing.json._
 import scala.util.Random
 
+
 object UserClassifier {
   /**
     Extract items from json string, which 'played'/'reviewed'/'rated' by user
@@ -38,21 +39,24 @@ object UserClassifier {
   }
 
   /**
-    归并用户相关的items，给已标出是'kid'或'adult'的用户添加'k'或'a'后缀，
-    如果'kid'/'adult'标记前后矛盾，拆分用户
+    Merge all items in this group. If already known the user is 'kid', add suffix 'k',
+    'adult' user add suffix 'a'. If seen a conflicting label, treat this user as two 
+    different user.
+
+    @param group, a group of sessions
    */
   def combine(group: Tuple2[String, Iterable[(Long, Long, Char, Iterable[String])]]) = {
     val user = group._1
-    // 将session对应的值按时间排序
+    // sort sessions by time, x._1 is start time, x._2 is end time
     val sortedValue = group._2.toSeq.sortBy(x => (x._1, x._2))
 
     def emptyIter = Iterable.empty[String]
 
-    // 这里的数据都属于同一用户（可能同时被两个人使用的同一账户），但要根据行为进行拆解用户
-    // items._1 标记当前处理的用户类型
-    // items._2 未知类型的用户对应的item
-    // items._3 kid用户对应的item
-    // items._4 adult用户对应的item
+    // all data are belong to a same user, but this user can treat as two different user
+    // items._1 current user type ('a' or 'k')
+    // items._2 items belong to unlabeled user
+    // items._3 items belong to kid user
+    // items._4 items belong to adult user
     val items = sortedValue.foldLeft(('n', emptyIter, emptyIter, emptyIter)) { (acc, x) =>
       val unknown = acc._2
       val kid = acc._3
@@ -71,43 +75,46 @@ object UserClassifier {
       }
     }
 
-    // 合并所有的items，并根据是否为kid，给user加'a'/'k'后缀
+    // merge all items, add 'a' or 'k' suffix to user name if need
     val data = (if(items._2.isEmpty) None else Some((user, items._2))) ::
       (if(items._3.isEmpty) None else Some((s"${user}k", items._3))) ::
       (if(items._4.isEmpty) None else Some((s"${user}a", items._4))) :: Nil
 
+    // user -> list of items
     data.flatMap(x => x)
   }
 
 
   /**
-    simrank算法
+    simrank implements
    */
   def simrank(matrix: RDD[(String, Iterable[String])], source: Array[String],
     beta: Double = 0.8, threshold: Double = 0.01): Map[String, Double] = {
-    // 初始分配给每个source的概率
-    val prob = 1.0 / source.size
-    val telport = (1.0 - beta) / source.size
+    // initial probability which assignment to each source
+    val N = source.size
+    val prob = 1.0 / N
+    val telport = (1.0 - beta) / N
     // v_0
     val v0 = source.foldLeft(Map.empty[String, Double])((acc, x) => acc.updated(x, prob))
 
     // recursively compute v_{k+1}
     def _simrank(v: Map[String,Double]): Map[String, Double] = {
-      // 计算出下一步distribution vector的部分值
-      val partialVn = matrix.flatMap { case (col, rows) =>
+      // compute the major distribution vector of next state
+      val majorVn = matrix.flatMap { case (col, rows) =>
         rows.flatMap { row => if(v.contains(col)) Option((row, v(col) / rows.size)) else None }
       } .groupByKey().map(
         x => (x._1, if(source.contains(x._1)) x._2.sum * beta + telport else x._2.sum * beta)
       ) .collect
 
-      // 找出在partialVn中没有出现，但在source中存在的结点
-      val noAppearSource = source.filter(x => !partialVn.contains(x))
+      // find all 'user' which appear in source, but not appear in 'majorVn'
+      val noAppearSource = source.filter(x => !majorVn.contains(x))
       val onlyTelportV = noAppearSource.foldLeft(Map.empty[String, Double])((acc, x) => acc.updated(x, telport))
-      // 合并partialVn和onlyTelportV，得到最终的vn
-      val nv = partialVn.foldLeft(onlyTelportV)((acc, x) => acc.updated(x._1, x._2))
+      // merge 'majorVn' and 'onlyTelportV', we got the final distribution vector of next state
+      val nv = majorVn.foldLeft(onlyTelportV)((acc, x) => acc.updated(x._1, x._2))
 
-      // 计算差值
       val diff = nv.foldLeft(0.0)((acc, x) => if(v.contains(x._1)) acc + Math.abs(v(x._1) - x._2) else acc + x._2)
+
+      // if 'diff' bigger than threshold loop again, else return distribution vector
       if(diff > threshold) { _simrank(nv) } else { nv }
     }
 
@@ -118,12 +125,17 @@ object UserClassifier {
   def threshold = 1E-6
 
   /**
-    根据给出的数据，求解分类
+    classifition
+
+    @param data, data
+    @param adult, labeled adult users
+    @param kid, labeled kid users
    */
   def solve(data: RDD[(String, Iterable[String])], adult: Array[String], kid: Array[String]) = {
     // Step 3. Build an adjacency matrix
     val matrix = data.union(data.flatMap(x => x._2.map(item => (item, x._1))).groupByKey())
 
+    // a regex pattern which match user name
     val pattern = """\d{7,8}[ak]?""".r.pattern
 
     val adultV = simrank(matrix, adult, beta, threshold).filter(x => pattern.matcher(x._1).matches)
@@ -134,9 +146,9 @@ object UserClassifier {
     val kidNum = kid.size
     val normalAdultV = adultV.map(x => (x._1, -1.0 * adultNum / kidNum))
 
-    // merge, /: like is alternate syntax of foldLeft
-    val v = (normalAdultV /: kidV) { case (m, (key, value)) => m + (key -> (value + m.getOrElse(key, 0.0) + 1.0))}
-    // 丢弃重复的user id
+    // merge
+    val v = normalAdultV.foldLeft(kidV) { case (m, (key, value)) => m + (key -> (value + m.getOrElse(key, 0.0) + 1.0))}
+    // drop duplicate user, remove 'a' or 'k' suffix
     val solution = v.keySet.toList.sorted.foldLeft(Map.empty[String, Int]) {(acc, k) =>
       val user = if(k.endsWith("k") || k.endsWith("a")) k.init else k
       acc.updated(user, v(k).toInt)
@@ -160,23 +172,22 @@ object UserClassifier {
   def test(data: RDD[(String, Iterable[String])]) = {
     val user = data.map(_._1)
 
-    // 将已知类型的用户按4:1的比例分成training set和test set
+    // split adult users as training set and test set 
     val adult = user.filter(_.endsWith("a")).collect
     val (adultTrain, adultTest) = Random.shuffle(adult.toSeq).splitAt((adult.size / 5.0 * 4).toInt)
 
+    // split kid users as training set and test set
     val kid = user.filter(_.endsWith("k")).collect
     val (kidTrain, kidTest) = Random.shuffle(kid.toSeq).splitAt((kid.size / 5.0 * 4).toInt)
 
-    // 将test set的数据转换成map形式，方便与solution对比，这一步会把'a'和'k'后缀移除
+    // convert test set to Map format, eg. 1234567 -> 0 or 7654321 -> 1
     val testSet = kidTest.map(_.init).foldLeft(adultTest.map(_.init -> 0).toMap) {
       (acc, x) => acc.updated(x, 1)
     }
 
     val solution = solve(data, adultTrain.toArray, kidTrain.toArray)
 
-    // 预测正确的数量除以总数量
     val accuracy = testSet.filter{
-      // solution不存在的user算作预测正确
       case(user, label) => if (solution.contains(user)) solution(user) == label else true
     }.size / testSet.size.toDouble * 100
 
